@@ -1,0 +1,113 @@
+# ===================== LadderDesign（梯子デザイン切替）設定 =====================
+# コマンド: /ladderdesign <1-6|list|random|reload>
+#   番号 … パターン番号（下の patterns の順）。
+#   list … パターン一覧を表示。
+#   random … ランダムなパターンを適用。
+#   reload … この config.yml を再読み込み。
+#
+# 範囲は s2e-ladder の plugins/s2e-ladder/config.yml の start 座標・height から
+# 自動取得し、start の真上の柱（half-width / half-depth で太さ調整）を塗り替えます。
+# はしご(LADDER)・ツル・空気など「登れる/通れるもの」は塗らずに残すので登坂に影響しません。
+# ===============================================================================
+
+scan:
+  # 柱の太さ。half-width=1 なら X方向に -1..+1 の 3 ブロック幅。
+  half-width: 1
+  half-depth: 1
+  # start.y からの開始オフセット。地面を巻き込みたくなければ +2 などにする。
+  y-offset: 0
+  # 高さ(height)に足す上方向の余白。
+  y-top-extra: 0
+
+# カラフル系（patterns の blocks が複数）で、1色が続く高さ(ブロック数)。
+# 3〜5 マスごとに色が変わる細かいデザインにしたい場合は 3〜5 を指定。
+band-height: 4
+
+# ===== 足場（床）設定 =====
+# 既存の 15×15 赤コンクリート足場を再生成するための設定。
+# 妨害配信で床が破壊されたとき /ladderdesign floor で復元できる。
+# start 座標を中心に、size-x × size-z の床を material で敷く。
+floor:
+  material: RED_CONCRETE   # 床ブロック。
+  size-x: 16               # X方向の幅。
+  size-z: 16               # Z方向の幅。
+  center-x-offset: 0       # 床の中心を start.x から X方向へずらす量。
+  center-z-offset: 0       # 床の中心を start.z から Z方向へずらす量。
+  y-offset: -1             # 床の高さ。start.y から上下にずらす（-1=スタートの1つ下）。
+  layers: 1                # 床の厚み（下方向へ重ねる枚数）。
+  # デザイン適用（/ladderdesign <番号>）時にも自動で足場を生成するか。
+  apply-with-design: true
+
+# ===== 透明バリア（外周の壁）設定 =====
+# /ladderdesign barrier で、start を中心に size-x × size-z（既定20×20）の外周に
+# 透明な BARRIER ブロックの壁を立てる。内側は空けるので登坂・梯子に影響しない。
+# 撤去は /ladderdesign barrier clear。
+# ※ BARRIER は爆破耐性が岩盤と同じため、TNT では壊れません。
+barrier:
+  material: BARRIER        # 透明バリアブロック（TNT耐性あり）。
+  size-x: 20               # バリアの外周サイズ（X方向）。
+  size-z: 20               # バリアの外周サイズ（Z方向）。
+  center-x-offset: 0       # バリア中心を start.x から X方向へずらす量。
+  center-z-offset: 0       # バリア中心を start.z から Z方向へずらす量。
+  height: 1040             # 壁の高さ（ブロック数）。
+  y-offset: 0              # 壁の開始高さ（start.y からのオフセット）。
+  # デザイン適用（/ladderdesign <番号>）時にも自動でバリアを張り直すか。
+  apply-with-design: true
+
+# ===== 頂上（ゴール）プラットフォーム設定 =====
+# /ladderdesign top で、頂上のゴール床を生成。start を基準に 7×7（center-x-offset=-3）を
+# 絶対 Y=top.y（既定10000）に敷く。
+# ※ Y は start.y を加算しない絶対値。ワールドの建築上限を超える Y は設置できない点に注意。
+top:
+  material: RED_CONCRETE   # 頂上の床ブロック。
+  size-x: 6                # 頂上の広さ（X方向）。
+  size-z: 7                # 頂上の広さ（Z方向）。
+  center-x-offset: -3      # 頂上中心を start.x からずらす量（ゴールは start が端なので -3）。
+  center-z-offset: -1      # 頂上中心を start.z からずらす量（Z方向へ1マス後ろへ）。
+  y: 981                   # ゴール床の絶対 Y。0 を指定すると ladder.height(1000) を使用。
+  y-offset: 0              # 上の絶対 Y からのオフセット（+で上、-で下）。
+  layers: 1                # 厚み（下方向へ重ねる枚数）。
+  # デザイン適用（/ladderdesign <番号>）時にも自動で頂上を生成するか。
+  # ※ false にすると、デザイン切替で頂上の赤コンクリ床が自動生成されなくなる。
+  #   手動で出したいときは /ladderdesign top、消したいときは /ladderdesign top clear。
+  apply-with-design: false
+
+# /ladder delete を検知したとき、LadderDesign が作った透明バリアと頂上ゴール床を
+# 自動で撤去するか（梯子を消したら枠とゴールも一緒に消える）。
+clear-on-ladder-delete: true
+
+# 塗り替えずに必ず残すブロック（はしご等は isSolid()=false なので元から対象外。
+# ここには「固体だが残したいもの」を入れる）。
+keep-blocks:
+  - BEDROCK
+
+# パターン定義（上から番号 1,2,3...）。
+#   blocks が1つ → そのブロックで全面を塗る（素材テーマ）。
+#   blocks が複数 → band（無ければ band-height）ごとに色を切り替える（カラフル）。
+#   band: N … そのパターン固有の色替え間隔（マス数）。省略時はグローバルの band-height。
+patterns:
+  # --- 素材テーマ（単色） ---
+  - name: "木"
+    blocks: [OAK_PLANKS]
+  - name: "石英(白)"
+    blocks: [QUARTZ_BLOCK]
+  - name: "ネザー(赤)"
+    blocks: [NETHER_BRICKS]
+  - name: "エンド(紫)"
+    blocks: [PURPUR_BLOCK]
+  # --- カラフル（カラフルガラス／コンクリートは 3マスごとに色替え） ---
+  - name: "カラフルガラス"
+    band: 3
+    blocks: [RED_STAINED_GLASS, ORANGE_STAINED_GLASS, YELLOW_STAINED_GLASS, LIME_STAINED_GLASS, LIGHT_BLUE_STAINED_GLASS, BLUE_STAINED_GLASS, PURPLE_STAINED_GLASS, MAGENTA_STAINED_GLASS]
+  - name: "カラフルコンクリート"
+    band: 3
+    blocks: [RED_CONCRETE, ORANGE_CONCRETE, YELLOW_CONCRETE, LIME_CONCRETE, LIGHT_BLUE_CONCRETE, BLUE_CONCRETE, PURPLE_CONCRETE, MAGENTA_CONCRETE]
+  - name: "レインボーウール"
+    blocks: [RED_WOOL, ORANGE_WOOL, YELLOW_WOOL, LIME_WOOL, GREEN_WOOL, CYAN_WOOL, LIGHT_BLUE_WOOL, BLUE_WOOL, PURPLE_WOOL, MAGENTA_WOOL, PINK_WOOL]
+  - name: "レインボーテラコッタ"
+    blocks: [RED_TERRACOTTA, ORANGE_TERRACOTTA, YELLOW_TERRACOTTA, LIME_TERRACOTTA, GREEN_TERRACOTTA, CYAN_TERRACOTTA, LIGHT_BLUE_TERRACOTTA, BLUE_TERRACOTTA, PURPLE_TERRACOTTA, MAGENTA_TERRACOTTA, PINK_TERRACOTTA]
+  # --- 自然・テーマ系 ---
+  - name: "海(プリズマリン)"
+    blocks: [PRISMARINE, PRISMARINE_BRICKS, DARK_PRISMARINE, SEA_LANTERN]
+  - name: "砂漠(砂岩)"
+    blocks: [SANDSTONE, SMOOTH_SANDSTONE, CUT_SANDSTONE, RED_SANDSTONE, SMOOTH_RED_SANDSTONE]

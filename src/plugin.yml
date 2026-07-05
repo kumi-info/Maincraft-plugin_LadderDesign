@@ -1,0 +1,15 @@
+name: LadderDesign
+version: '1.8.0'
+main: com.liverecord.ladderdesign.LadderDesignPlugin
+api-version: '1.21'
+author: LiveRecord
+description: '梯子（登る塔）の背面ブロックをテーマ/カラフルに塗り替えるコマンド'
+commands:
+  ladderdesign:
+    description: '梯子のデザインを切り替える'
+    usage: '/ladderdesign <1-10|list|random|floor|barrier|top|reload>'
+    permission: ladderdesign.use
+permissions:
+  ladderdesign.use:
+    description: 'ladderdesign の操作権限'
+    default: op
