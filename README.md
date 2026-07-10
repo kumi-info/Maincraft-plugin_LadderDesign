@@ -1,6 +1,6 @@
 # LadderDesign
 
-**バージョン: v1.8.0**
+**バージョン: v1.9.0**
 
 梯子（s2e-ladder の登る塔）の**背面ブロックをテーマ／カラフルに塗り替える**コマンドプラグインです。TikTok 妨害配信の Ladder サーバー向け。配信の雰囲気を一発で変えられます。**スタート地点の 16×16 足場（赤コンクリート）の再生成**にも対応（配信で床が破壊されたとき用）。
 
@@ -9,7 +9,7 @@
 ## できること
 
 - `/ladderdesign <番号>` 一発で梯子の見た目を切り替え（**10パターン**）。
-- s2e-ladder の設定から **スタート座標・高さを自動取得**するので、座標指定は不要。
+- **連携先設定の `arena` を優先**して座標・高さを自動取得。無ければ s2e-ladder（`ladder.start`/`ladder.height`）へフォールバックするので、座標指定は不要（LadderTop v1.4.0 と同方式）。
 - **はしご(LADDER)・ツル・空気は塗らずに残す**ので、塗り替えても登坂プレイに影響しません（壁ブロックの素材／色だけ変わります）。
 - カラフル系は**高さ方向にグラデーション**で色が変わります（既定 **4マスごと**。カラフルガラス／コンクリートは **3マスごと**。パターンごとに `band` で個別指定可）。
 - `/ladderdesign floor` で **16×16 の足場（赤コンクリート）を再生成**。配信で床が壊されても一発で復元。デザイン切替時にも自動で足場を敷きます（`floor.apply-with-design`）。
@@ -66,7 +66,7 @@
 
 ## 仕組み
 
-- **範囲取得**: `plugins/s2e-ladder/config.yml` の `ladder.start`(world/x/y/z) と `ladder.height` を読み、start の真上の柱を対象にします。
+- **範囲取得**: `連携先の config.yml` の `arena`(world/x/y/z/height) を優先して読み、無ければ `plugins/s2e-ladder/config.yml` の `ladder.start`(world/x/y/z) と `ladder.height` へフォールバック。基点の真上の柱を対象にします。ゴール面の絶対 Y は 連携先 では `floor(arena.y) + arena.height - 1`、s2e-ladder では `ladder.height`（絶対 Y、従来どおり）。コマンド実行時にどちらを読んだかをサーバーログに出力します。
 - **塗り替え対象**: 柱（既定 3×3）の中で `isSolid()` の固体ブロックのみを置換。`LADDER`・`VINE`・`SCAFFOLDING`・空気などは `isSolid()==false` なので自動的に除外されます。`keep-blocks`（既定 `BEDROCK`）も保護します。
 - **グラデーション**: `blocks` が複数のパターンは、`band-height`（既定4ブロック）ごとに次の色へ切り替わります。各パターンに `band: N` を書くと、そのパターンだけ N マスごとに切り替えできます（カラフルガラス／コンクリートは `band: 3`）。
 - **足場（床）**: `/ladderdesign floor` は start 座標を中心に `floor.size-x`×`floor.size-z`（既定 16×16）の床を `floor.material`（既定 `RED_CONCRETE`）で敷きます。高さは `floor.y-offset`（既定 -1＝スタートの1つ下）。デザイン切替時も `floor.apply-with-design: true` なら自動で敷き直します。床がズレる場合は `floor.center-x-offset` / `center-z-offset` / `y-offset` を調整して `/ladderdesign reload`。
@@ -149,6 +149,7 @@ patterns:
 
 | バージョン | 変更点 |
 |---|---|
+| v1.9.0 | 連携対応強化。座標を `連携先の config.yml` の `arena` から優先取得し、無ければ s2e-ladder へフォールバック（LadderTop v1.4.0 と同方式）。`softdepend: [s2e-ladder]` を追加。`top.y: 0` 時のゴール Y は 連携先 では `floor(arena.y)+arena.height-1`。塗り替え上端をゴール面の絶対 Y 基準に変更。 |
 | v1.8.0 | `/ladder delete` を検知して、LadderDesign が作った透明バリアと頂上ゴール床を自動撤去する `clear-on-ladder-delete`（既定ON）を追加。 |
 | v1.7.2 | 頂上ゴールの撤去 `/ladderdesign top clear [Y]`、絶対Y指定生成 `/ladderdesign top <Y>` を追加。 |
 | v1.7.1 | 頂上ゴールの既定を実ゴールに合わせて調整（6×7・絶対 Y=981・`center-z-offset` -1 で Z方向へ1マス後ろ）。 |

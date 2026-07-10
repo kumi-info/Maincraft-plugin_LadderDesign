@@ -1,9 +1,10 @@
 name: LadderDesign
-version: '1.8.0'
+version: '1.9.0'
 main: com.liverecord.ladderdesign.LadderDesignPlugin
 api-version: '1.21'
 author: LiveRecord
-description: '梯子（登る塔）の背面ブロックをテーマ/カラフルに塗り替えるコマンド'
+description: '梯子（s2e-ladder の登る塔）の背面ブロックをテーマ/カラフルに塗り替えるコマンド'
+softdepend: [s2e-ladder]
 commands:
   ladderdesign:
     description: '梯子のデザインを切り替える'

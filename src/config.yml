@@ -5,8 +5,10 @@
 #   random … ランダムなパターンを適用。
 #   reload … この config.yml を再読み込み。
 #
-# 範囲は s2e-ladder の plugins/s2e-ladder/config.yml の start 座標・height から
-# 自動取得し、start の真上の柱（half-width / half-depth で太さ調整）を塗り替えます。
+# 範囲は 連携先設定（config.yml の arena）を優先して自動取得し、
+# 無ければ s2e-ladder（plugins/s2e-ladder/config.yml の ladder.start/height）へ
+# フォールバックします。基点の真上の柱（half-width / half-depth で太さ調整）を塗り替えます。
+# ゴール面の絶対 Y は 連携先: floor(arena.y)+arena.height-1 / s2e: ladder.height。
 # はしご(LADDER)・ツル・空気など「登れる/通れるもの」は塗らずに残すので登坂に影響しません。
 # ===============================================================================
 
@@ -64,7 +66,7 @@ top:
   size-z: 7                # 頂上の広さ（Z方向）。
   center-x-offset: -3      # 頂上中心を start.x からずらす量（ゴールは start が端なので -3）。
   center-z-offset: -1      # 頂上中心を start.z からずらす量（Z方向へ1マス後ろへ）。
-  y: 981                   # ゴール床の絶対 Y。0 を指定すると ladder.height(1000) を使用。
+  y: 981                   # ゴール床の絶対 Y。0 を指定するとゴール面の絶対 Y（連携先: floor(arena.y)+arena.height-1 / s2e: ladder.height）を使用。
   y-offset: 0              # 上の絶対 Y からのオフセット（+で上、-で下）。
   layers: 1                # 厚み（下方向へ重ねる枚数）。
   # デザイン適用（/ladderdesign <番号>）時にも自動で頂上を生成するか。
